@@ -60,39 +60,39 @@ if cs = '1' and rd = '0' and iom = '1' then
 		
 		
 			-- Implementación corregida de Bubble Sort en ROM
-		when "0011011" => data <= "00011000";  -- MOV ACC,CTE (Contador externo = 7)
-		when "0011100" => data <= "00000111";  -- CTE (7)
-		when "0011101" => data <= "10001000";  -- PUSH ACC (Guardar contador externo)
+		when "0011011" => data <= "00011000";  -- 0x1B MOV ACC,CTE (Contador externo = 7)
+		when "0011100" => data <= "00000111";  -- 0x1C CTE (7)
+		when "0011101" => data <= "10001000";  -- 0x1D PUSH ACC (Guardar contador externo)
 
 		-- Inicio del bucle externo
-		when "0011110" => data <= "00011000";  -- MOV ACC,CTE (DPTR = 0x80, inicio de los datos)
-		when "0011111" => data <= "10000000";  -- CTE (0x80)
-		when "0100000" => data <= "00101000";  -- MOV DPTR,ACC
-		when "0100001" => data <= "00011000";  -- MOV ACC,CTE (Contador interno = 7)
-		when "0100010" => data <= "00000111";  -- CTE (7)
-		when "0100011" => data <= "10001000";  -- PUSH ACC (Guardar contador interno)
+		when "0011110" => data <= "00011000";  -- 0x1E MOV ACC,CTE (DPTR = 0x80, inicio de los datos)
+		when "0011111" => data <= "10000000";  -- 0x1F CTE (0x80)
+		when "0100000" => data <= "00101000";  -- 0x20 MOV DPTR,ACC
+		when "0100001" => data <= "00011000";  -- 0x21 MOV ACC,CTE (Contador interno = 7)
+		when "0100010" => data <= "00000111";  -- 0x22 CTE (7)
+		when "0100011" => data <= "10001000";  -- 0x23 PUSH ACC (Guardar contador interno)
 
 		-- Inicio del bucle interno
-		when "0100100" => data <= "00100000";  -- MOV ACC,[DPTR] (Cargar primer elemento)
-		when "0100101" => data <= "00001000";  -- MOV A,ACC (Mover a A para comparación)
-		when "0100110" => data <= "00011000";  -- MOV ACC,CTE (Incrementar DPTR)
-		when "0100111" => data <= "00000001";  -- CTE (1)
-		when "0101000" => data <= "01001000";  -- ADD ACC,A (DPTR + 1)
-		when "0101001" => data <= "00101000";  -- MOV DPTR,ACC
-		when "0101010" => data <= "00100000";  -- MOV ACC,[DPTR] (Cargar segundo elemento)
-		when "0101011" => data <= "10011000";  -- CMP ACC,A (Comparar con el primer elemento)
-		when "0101100" => data <= "01100000";  -- JN SWAP (Saltar si hay que intercambiar)
-		when "0101101" => data <= "00110000";   -- DIR (SWAP)
-		when "0101110" => data <= "01010000";  -- JMP NEXT (Si no hay que intercambiar, continuar)
-		when "0101111" => data <= "00110110";   -- DIR (NEXT)
-
+		 when "0100100" => data <= "00100000";  -- 0x24 MOV ACC,[DPTR] (Cargar primer elemento)
+		 when "0100101" => data <= "00010000";  -- 0x25 MOV A,ACC (Mover a A para comparación) ***ojo***
+		 when "0100110" => data <= "10101000";  -- 0x26 Incrementar DPTR (DPTR+1) ******
+		 when "0100111" => data <= "00100000";  -- 0x27 MOV ACC,[DPTR] (Cargar segundo elemento)
+		 when "0101000" => data <= "10011000";  -- 0x28 CMP ACC,A (Comparar con el primer elemento)  
+		 when "0101001" => data <= "01100000";  -- 0x29 JN SWAP (Saltar si hay que intercambiar)
+		 when "0101010" => data <= "00101101";  -- 0x2A DIR (SWAP)
+		 when "0101011" => data <= "01010000";  -- 0x2B JMP NEXT (Si no hay que intercambiar, continuar)
+		 when "0101100" => data <= "00110101";  -- 0x2C DIR (NEXT)
+		 
 		-- Rutina de intercambio (SWAP)
-		when "0110000" => data <= "10100000";  -- XCHG ACC,[DPTR] (Intercambiar segundo elemento)
-		when "0110001" => data <= "00011000";  -- MOV ACC,CTE (Decrementar DPTR)
-		when "0110010" => data <= "11111111";  -- CTE (-1)
-		when "0110011" => data <= "01001000";  -- ADD ACC,A (DPTR - 1)
-		when "0110100" => data <= "00101000";  -- MOV DPTR,ACC
-		when "0110101" => data <= "10100000";  -- XCHG ACC,[DPTR] (Intercambiar primer elemento)
+		 when "0101101" => data <= "10100000";  -- 0x2D XCHG ACC,[DPTR] (Intercambiar segundo elemento)
+		 when "0101110" => data <= "00011000";  -- 0x2E MOV ACC,CTE (Decrementar DPTR)
+		 when "0101111" => data <= "11111111";  -- 0x2F CTE (-1)
+		 when "0110000" => data <= "00001000";  -- 0x30 MOV A, ACC
+		 when "0110001" => data <= "10110000";  -- 0x31 MOV ACC,DPTR
+		 when "0110010" => data <= "01001000";  -- 0x32 ADD ACC,A (DPTR - 1)
+		 when "0110011" => data <= "00101000";  -- 0x33 MOV DPTR,ACC
+		 when "0110100" => data <= "10100000";  -- 0x34 XCHG ACC,[DPTR] (Intercambiar primer elemento)
+
 
 		-- Continuar bucle interno (NEXT)
 		when "0110110" => data <= "00011000";  -- MOV ACC,CTE (Incrementar DPTR para siguiente comparación)
@@ -134,4 +134,3 @@ if cs = '1' and rd = '0' and iom = '1' then
 end if;  
 end process;
 end Behavioral;
-
