@@ -1,35 +1,35 @@
--- ***********************************************************
--- ** PROYECTO PDUA                                         **
--- **   										                        **
--- ** Universidad de Los Andes                              **
--- ** Pontificia Universidad Javeriana                      **
--- **   										                        **
--- ** Rev 0.0 Arq Basica        Mauricio Guerrero   06/2007 **
--- ** Rev 0.1 Microprograma     Mauricio Guerrero           **
--- **         RAM doble puerto  Diego Méndez        11/2007 **
--- ** Rev 0.2 ALU bit-slice     MGH                 03/2008 **
--- ** Rev 0.3 Corrección Doc    DMCH                03/2009 **
--- ** Rev 0.4 ROM-RAM 128       DMCH                11/2009 **
--- ** Rev 0.5 PUSH-POP          DMCH                11/2009 **
--- ** Rev 0.6 Videos-Doc        DMCH                03/2021 **
--- ***********************************************************
+-- *********************
+-- * PROYECTO PDUA                                         *
+-- *   										                        *
+-- * Universidad de Los Andes                              *
+-- * Pontificia Universidad Javeriana                      *
+-- *   										                        *
+-- * Rev 0.0 Arq Basica        Mauricio Guerrero   06/2007 *
+-- * Rev 0.1 Microprograma     Mauricio Guerrero           *
+-- *         RAM doble puerto  Diego Méndez        11/2007 *
+-- * Rev 0.2 ALU bit-slice     MGH                 03/2008 *
+-- * Rev 0.3 Corrección Doc    DMCH                03/2009 *
+-- * Rev 0.4 ROM-RAM 128       DMCH                11/2009 *
+-- * Rev 0.5 PUSH-POP          DMCH                11/2009 *
+-- * Rev 0.6 Videos-Doc        DMCH                03/2021 *
+-- *********************
 
--- ***********************************************************
+-- *********************
 -- Descripcion:     CLK|    |Rst_n
---               ______|____|___________________ 
---              |    _________     __________   |
+--               _||______ 
+--              |    ___     ____   |
 --        HRI-->|-->|         |   |          |  |
 -- INST(7..3)-->|-->| OPCODE  |-->|Dir_H     |  |
---              |   |_________|   |  MEMORIA |->|-> Uinst
---              |    _________    |    uINST |  |
+--              |   |_|   |  MEMORIA |->|-> Uinst
+--              |    ___    |    uINST |  |
 -- uDIR(2..0)-->|-->|   uPC   |-->| Dir_L    |  |
---              |   |_________|   |__________|  |
+--              |   ||   |_|  |
 --              |     |                         |
---              |    _|_______                  |                                    
+--              |    |__                  |                                    
 --       COND-->|-->| EVAL    |                 |
---      FLAGS-->|-->|_SALTOS__|                 |
--- (C,N,Z,P,INT)|_______________________________|      
--- ***********************************************************
+--      FLAGS-->|-->|SALTOS_|                 |
+-- (C,N,Z,P,INT)|_|      
+-- *********************
  
 
 library IEEE;
@@ -247,12 +247,12 @@ begin
 
 	--MODIFICACION PARA INCLUIR UNA NUEVA INSTRUCCION
 	
-	--INSTRUCCIONES NUEVAS PARA EL TALLER
+	
 		-- 10011 CMP ACC,A
 	when "10011000" => UI <= "1111000001011000101000XXX"; -- TEMP = ACC (para preservar ACC)
 	when "10011001" => UI <= "1011001000111000101000XXX"; -- B = NOT A (SELOP = 001)
 	when "10011010" => UI <= "0011110000111000101000XXX"; -- B = B + 1 (SELOP = 110) Ahora B = -A
-	when "10011011" => UI <= "0101101001111000101000XXX"; -- ACC= ACC + (-A), Set flags (SELOP = 101)
+	when "10011011" => UI <= "1011101001111000101000XXX"; -- ACC = ACC + (-A), Set flags (SELOP = 101)
 	when "10011100" => UI <= "0101000001111000100000XXX"; -- ACC = TEMP (restaurar ACC), Reset UPC
 	when "10011101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
 	when "10011110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
@@ -261,18 +261,48 @@ begin
 	-- 10100 XCHG ACC,[DPTR] (sin cambios)
 	when "10100000" => UI <= "001000000XXX0100101000XXX"; -- MAR = DPTR, RD MREQ
 	when "10100001" => UI <= "0XXXXXXXX1011010101000XXX"; -- MDR = DEX, RD MREQ, TEMP = MDR
-	when "10100010" => UI <= "111100000XXX0011101000XXX"; -- MDR = ACC, WR MREQ
-	when "10100011" => UI <= "0101000001111000100000XXX"; -- ACC = TEMP, Reset UPC
-	when "10100100" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
-	when "10100101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
-	when "10100110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
-	when "10100111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10100010" => UI <= "001000000XXX0100101000XXX"; -- MAR = DPTR
+	when "10100011" => UI <= "111100000XXX0011101000XXX"; -- MDR = ACC, WR MREQ --Escribe el elemento 2 en DPTR
+	when "10100100" => UI <= "1010110000101000101000XXX"; -- DPTR = DPTR+1
+	when "10100101" => UI <= "1101000001111000101000XXX"; -- ACC = TEMP --Muevo el elemento 1 a ACC
+	when "10100110" => UI <= "001000000XXX0100101000XXX"; -- MAR = DPTR, RD MREQ
+	when "10100111" => UI <= "111100000XXX0011100000XXX"; -- MDR = ACC, WR MREQ, RST UPC -- Escribe el elemento 1 en DPTR+1
+	
+	
+	
+	-- 10101 DPTR+1 (Incrementa el DPTR)
+	when "10101000" => UI <= "1010110000101000100000XXX"; -- DPTR=DPTR+1
+	when "10101001" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10101010" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10101011" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10101100" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10101101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10101110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10101111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	
+	-- 10110 MOV ACC,DPTR (Mueve el valor de DPTR a ACC)
+	when "10110000" => UI <= "1010000001111000100000XXX"; -- ACC= DPTR
+	when "10110001" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10110010" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10110011" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10110100" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10110101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10110110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10110111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	
+	-- 10111 DPTR-1 (Decrementa el DPTR)
+	when "10111000" => UI <= "1111000001011000101000XXX"; -- Temp = ACC (Guardo el valor de ACC en Temp)
+	when "10111001" => UI <= "1010000001111000101000XXX"; -- ACC=DPTR (El ACC toma la dirección de DPTR)
+	when "10111010" => UI <= "1110101001111000101000XXX"; -- ACC = ACC + CTE(-1)
+	when "10111011" => UI <= "1111000000101000101000XXX"; -- DPTR = ACC (DPTR -1)
+	when "10111100" => UI <= "1101000001111000100000XXX"; -- ACC = Temp (El ACC vuelve a su valor original)
+	when "10111101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10111110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	when "10111111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	
 
 	when others => UI <= (others => 'X');
 	
   end case;
  end process;
 end Behavioral;
-
-
-
