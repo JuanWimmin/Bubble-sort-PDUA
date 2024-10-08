@@ -16,19 +16,19 @@
 
 -- *********************
 -- Descripcion:     CLK|    |Rst_n
---               _||______ 
+--               __|_|______ 
 --              |    ___     ____   |
 --        HRI-->|-->|         |   |          |  |
 -- INST(7..3)-->|-->| OPCODE  |-->|Dir_H     |  |
---              |   |_|   |  MEMORIA |->|-> Uinst
+--              |   |___|   |  MEMORIA |->|-> Uinst
 --              |    ___    |    uINST |  |
 -- uDIR(2..0)-->|-->|   uPC   |-->| Dir_L    |  |
---              |   ||   |_|  |
+--              |   |___|   |____|  |
 --              |     |                         |
 --              |    |__                  |                                    
 --       COND-->|-->| EVAL    |                 |
 --      FLAGS-->|-->|SALTOS_|                 |
--- (C,N,Z,P,INT)|_|      
+-- (C,N,Z,P,INT)|___________|      
 -- *********************
  
 
@@ -248,29 +248,33 @@ begin
 	--MODIFICACION PARA INCLUIR UNA NUEVA INSTRUCCION
 	
 	
-		-- 10011 CMP ACC,A
+		-- 10011 CMP ACC,A (Hace una comparación entre dos sacando el complemento A2 de uno
+--                      	de los numeros y lo suma con el otro numero para alzar la bandera de N)
 	when "10011000" => UI <= "1111000001011000101000XXX"; -- TEMP = ACC (para preservar ACC)
-	when "10011001" => UI <= "1011001000111000101000XXX"; -- B = NOT A (SELOP = 001)
-	when "10011010" => UI <= "0011110000111000101000XXX"; -- B = B + 1 (SELOP = 110) Ahora B = -A
+	when "10011001" => UI <= "1011001000111000101000XXX"; -- A = NOT A (SELOP = 001)
+	when "10011010" => UI <= "0011110000111000101000XXX"; -- A = A + 1 (SELOP = 110) Ahora A = -A
 	when "10011011" => UI <= "1011101001111000101000XXX"; -- ACC = ACC + (-A), Set flags (SELOP = 101)
 	when "10011100" => UI <= "0101000001111000100000XXX"; -- ACC = TEMP (restaurar ACC), Reset UPC
 	when "10011101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
 	when "10011110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
 	when "10011111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
 
-	-- 10100 XCHG ACC,[DPTR] (sin cambios)
+
+	-- 10100 XCHG ACC,[DPTR] (Intercambia el contenido de dos elementos en memoria)
 	when "10100000" => UI <= "001000000XXX0100101000XXX"; -- MAR = DPTR, RD MREQ
-	when "10100001" => UI <= "0XXXXXXXX1011010101000XXX"; -- MDR = DEX, RD MREQ, TEMP = MDR
-	when "10100010" => UI <= "111100000XXX0011101000XXX"; -- MDR = ACC, WR MREQ
-	when "10100011" => UI <= "0101000001111000100000XXX"; -- ACC = TEMP, Reset UPC
-	when "10100100" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
-	when "10100101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
-	when "10100110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
-	when "10100111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10100001" => UI <= "0XXXXXXXX1011010101000XXX"; -- MDR = DEX, RD MREQ, TEMP = MDR (Escribe el elemento 1 en temp)
+	when "10100010" => UI <= "001000000XXX0100101000XXX"; -- MAR = DPTR
+	when "10100011" => UI <= "111100000XXX0011101000XXX"; -- MDR = ACC, WR MREQ (Escribe el elemento 2 en [DPTR] porque ya 
+	--                                                                            estaba precargado ese valor en el ACC)
+	when "10100100" => UI <= "1010110000101000101000XXX"; -- DPTR = DPTR+1 (Incremento el DPTR)
+	when "10100101" => UI <= "1101000001111000101000XXX"; -- ACC = TEMP  (Muevo el elemento 1 a ACC)
+	when "10100110" => UI <= "001000000XXX0100101000XXX"; -- MAR = DPTR, RD MREQ
+	when "10100111" => UI <= "111100000XXX0011100000XXX"; -- MDR = ACC, WR MREQ, RST UPC  (Escribe el elemento 1 en DPTR+1)
+	
 	
 	
 	-- 10101 DPTR+1 (Incrementa el DPTR)
-	when "10101000" => UI <= "1010110000101000100000XXX"; -- DPTR=DPTR+1
+	when "10101000" => UI <= "0010110000101000100000XXX"; -- DPTR=DPTR+1
 	when "10101001" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
 	when "10101010" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
 	when "10101011" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
@@ -279,15 +283,37 @@ begin
 	when "10101110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
 	when "10101111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
 	
-	-- 10110 MOV ACC,DPTR (Mueve el valor de DPTR a ACC)
-	when "10110000" => UI <= "1010000001111000100000XXX"; -- ACC= DPTR
-	when "10110001" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
-	when "10110010" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
-	when "10110011" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
-	when "10110100" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	-- 10110 DPTR-1 (Decrementa el DPTR))
+	when "10110000" => UI <= "1111000001011000101000XXX"; -- Temp = ACC (Guardo el valor de ACC en Temp)
+	when "10110001" => UI <= "1010000001111000101000XXX"; -- ACC = DPTR (El ACC toma la dirección de DPTR)
+	when "10110010" => UI <= "1110101001111000101000XXX"; -- ACC = ACC + CTE(-1
+	when "10110011" => UI <= "1111000000101000101000XXX"; -- DPTR = ACC (DPTR -1)
+	when "10110100" => UI <= "1101000001111000100000XXX"; -- ACC = Temp (El ACC vuelve a su valor original)
 	when "10110101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
 	when "10110110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
 	when "10110111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX"; --
+	
+	--10111 COMPSIGNED (Verifica si los signos son iguales o diferentes)
+	when "10111000" => UI <= "1011100001011000100000XXX"; -- Temp = ACC xor A (Hago un Xor entre ACC y A)
+	when "10111001" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10111010" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10111011" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10111100" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10111101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10111110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "10111111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	
+	
+	--11000 NOT ACC (Niega el contenido del ACC y se guarda en el mismo ACC)
+	when "11000000" => UI <= "1111001001111000100000XXX"; -- ACC = NOT ACC, RESET UPC
+   when "11000001" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "11000010" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "11000011" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "11000100" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "11000101" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "11000110" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+	when "11000111" => UI <= "XXXXXXXXXXXXXXXXXXXXXXXXX";
+
 	
 
 	when others => UI <= (others => 'X');
